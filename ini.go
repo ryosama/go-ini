@@ -153,8 +153,7 @@ func (this *Ini) GetSections() []string {
 	sections := make( []string, len(this.data) )
 	i := 0
 	for key,_ := range this.data {
-		sections[i] = key
-		i++
+		sections[i] = key ; i++
 	}
 	return sections
 }
@@ -164,8 +163,7 @@ func (this *Ini) GetItems(section string) []string {
 	items := make( []string, len(this.data[section].items) )
 	i := 0
 	for key,_ := range this.data[section].items {
-		items[i] = key
-		i++
+		items[i] = key ; i++
 	}
 	return items
 }
@@ -308,6 +306,24 @@ func (this *Ini) SetOrCreate(section string, item string, value string) {
 	this.Set(section,item,value)
 }
 
+// Delete an item, return true if succes, false if the item does not exists
+func (this *Ini) DeleteItem(section string,item string) bool {
+	if this.Exists(section,item) {
+		delete(this.data[section].items,item)
+		return true
+	}
+	return false
+}
+
+// Delete a section, return true if succes, false if the section does not exists
+func (this *Ini) DeleteSection(section string) bool {
+	if this.SectionExists(section) {
+		delete(this.data,section)
+		return true
+	}
+	return false
+}
+
 /*
 Save the ini format to a file
 
@@ -368,7 +384,6 @@ func (this *Ini) Print() {
 GetSectionComments(section string) []strings
 GetItemComments(section string,item string) []strings
 DeleteSection(section string) bool
-DeleteItem(section string,item string) bool
 DeleteComment(id int) bool
 DeleteComments() bool
 */

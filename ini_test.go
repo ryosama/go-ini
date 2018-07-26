@@ -173,4 +173,31 @@ func Test (t *testing.T) {
 		t.Error("For", "Get(new section,new item)","expected", expectedValue,"got", s)
 	}
 
+	// DeteleItem
+	if b = myIni.DeleteItem("new section","new item") ; !b {
+		t.Error("For", "DeleteItem(new section, new item)","expected", true,"got", b)
+	}
+	// Exists
+	if b = myIni.Exists("new section", "new item") ; b {
+		t.Error("For", "Exists(new section, new item)","expected", false, "got", b)
+	}
+	// DeteleItem try to redelete a not existing item
+	if b = myIni.DeleteItem("new section","new item") ; b {
+		t.Error("For", "DeleteItem(new section, new item)","expected", false,"got", b)
+	}
+
+	// DeleteSection
+	if b = myIni.DeleteSection("new section") ; !b {
+		t.Error("For", "DeleteSection(new section)","expected", true,"got", b)
+	}
+	// Exists
+	if b = myIni.SectionExists("new section") ; b {
+		t.Error("For", "SectionExists(new section)","expected", false, "got", b)
+	}
+	// DeleteSection try to redelete a not existing section
+	if b = myIni.DeleteSection("new section") ; b {
+		t.Error("For", "DeleteSection(new section)","expected", false,"got", b)
+	}
+
+	//myIni.Print()
 }
