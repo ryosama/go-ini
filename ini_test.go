@@ -36,6 +36,15 @@ func Test (t *testing.T) {
 `
 	myIni.LoadFromString(&content)
 
+	//myIni.SectionSeparator 	= "\r\n;-----------------------\r\n"
+	//myIni.ItemSeparator 	= "\r\n"
+	//myIni.SectionPrefix 	= " "
+	//myIni.ItemPrefix 		= " "
+	//myIni.ItemSuffix 		= " "
+	//myIni.ValuePrefix 	= " "
+	//myIni.CommentPrefix  	= "# "
+
+
 	// GetSections
 	a = myIni.GetSections() ; sort.Strings(a) ;	s = fmt.Sprintf("%v", a )
 	exceptedSections := fmt.Sprintf("%v", []string{"section1","section2"} )
@@ -197,6 +206,34 @@ func Test (t *testing.T) {
 	// DeleteSection try to redelete a not existing section
 	if b = myIni.DeleteSection("new section") ; b {
 		t.Error("For", "DeleteSection(new section)","expected", false,"got", b)
+	}
+
+	// GetSectionComments
+	a = myIni.GetSectionComments("section1") ;	s = fmt.Sprintf("%v", a )
+	exceptedComments := fmt.Sprintf("%v", []string{"quelques comment en debut de fichier", "un autre commentaire en debut"} )
+	if s != exceptedComments {
+		t.Error("For", "GetSectionComments(section1)", "expected", exceptedComments , "got", s )
+	}
+
+	// GetSectionComments with no comments
+	a = myIni.GetSectionComments("another new section") ; s = fmt.Sprintf("%v", a )
+	exceptedComments = fmt.Sprintf("%v", []string{} )
+	if s != exceptedComments {
+		t.Error("For", "GetSectionComments(another new section)", "expected", exceptedComments , "got", s )
+	}
+
+	// GetItemComments
+	a = myIni.GetItemComments("section1","item1") ; s = fmt.Sprintf("%v", a )
+	exceptedComments = fmt.Sprintf("%v", []string{"ce com est pour section1.item1", "ce 2eme com est pour section1.item1"} )
+	if s != exceptedComments {
+		t.Error("For", "GetItemComments(section1,item1)", "expected", exceptedComments , "got", s )
+	}
+
+	// GetItemComments with no comments
+	a = myIni.GetItemComments("another new section","added item") ; s = fmt.Sprintf("%v", a )
+	exceptedComments = fmt.Sprintf("%v", []string{} )
+	if s != exceptedComments {
+		t.Error("For", "GetItemComments(another new section,added item)", "expected", exceptedComments , "got", s )
 	}
 
 	//myIni.Print()

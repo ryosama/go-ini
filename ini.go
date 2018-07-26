@@ -29,7 +29,7 @@ import (
 	"regexp"
 	"errors"
 	"os"
-	_ "github.com/davecgh/go-spew/spew"
+	// "github.com/davecgh/go-spew/spew"
 )
 
 
@@ -46,14 +46,29 @@ type Ini struct {
 	// Last filename pass to Load or Save
 	Filename 	string
 
-	// Add this string before every items (default is "")
-	ItemPrefix 	string
+	// Add this string before section (default is "")
+	SectionPrefix string
 
-	// Add this string before every new sections (except the first one) (default is "")
+	// Add this string before every items (default is "  ")
+	ItemPrefix 	string
+	
+	// Add this string after every items (default is " ")
+	ItemSuffix 	string
+
+	// Add this string before every values (default is " ")
+	ValuePrefix	string
+
+	// Add this string before every new sections (except the first one) (default is "\r\n")
 	SectionSeparator string
 
-	// If true Remove the comments while saving (default is false)
-	NoComments bool
+	// Add this string before every new item (except the first one) (default is "\r\n")
+	ItemSeparator string
+
+	// If set to false, remove all the comments while saving (default is true)
+	WithComments bool
+
+	// Caractere(s) from prefixing a comment (default is "; ")
+	CommentPrefix string
 }
 
 
@@ -102,12 +117,21 @@ myini.LoadFromString( &content )
 */
 func (this *Ini) LoadFromString(content *string) {
 
+	// default value for formating
+	this.WithComments 		= true
+	this.CommentPrefix 		= "; "
+	this.SectionSeparator 	= "\r\n"
+	this.ItemSeparator		= "\r\n"
+	this.ItemPrefix 		= "  "
+	this.ItemSuffix			= " "
+	this.ValuePrefix		= " "
+
 	current_section := ""
 	comments 	    := make([]string,0)
 
     content_array := strings.Split( *content, "\n") // split lines into array
 
-    re_comment 	:= regexp.MustCompile("\\s*[;#](.*)")
+    re_comment 	:= regexp.MustCompile("\\s*[;#]\\s*(.*)")
     re_section 	:= regexp.MustCompile("\\s*\\[\\s*(.+?)\\s*\\]")
 	re_item 	:= regexp.MustCompile("\\s*(.+?)\\s*=\\s*(.+)\\s*")
 
@@ -251,7 +275,7 @@ Rename an item
 Returns true if success, false if section or item does not exists
 */
 func (this *Ini) RenameItem(section, oldName string, newName string) bool {
-	if this.Exists(section, oldName) {
+	if this.ItemExists(section, oldName) {
 		this.data[section].items[newName] = this.data[section].items[oldName]
 		delete(this.data[section].items, oldName)
 		return true
@@ -308,7 +332,7 @@ func (this *Ini) SetOrCreate(section string, item string, value string) {
 
 // Delete an item, return true if succes, false if the item does not exists
 func (this *Ini) DeleteItem(section string,item string) bool {
-	if this.Exists(section,item) {
+	if this.ItemExists(section,item) {
 		delete(this.data[section].items,item)
 		return true
 	}
@@ -322,6 +346,42 @@ func (this *Ini) DeleteSection(section string) bool {
 		return true
 	}
 	return false
+}
+
+/*
+Return the comments, one per line, just before the section, return empty slice of string if section does not exists.
+
+Example : 
+
+for _, com := range sectionExists := myIni.GetSectionComments("mySection") {
+
+	print("Comment for mySection", com, "\n")
+
+}
+*/
+func (this *Ini) GetSectionComments(section string) []string {
+	if this.SectionExists(section) {
+		return this.data[section].comments
+	}
+	return make([]string,0)
+}
+
+/*
+Return the comments, one per line, just before the item, return empty slice of string if item does not exists.
+
+Example : 
+
+for _, com := range myIni.GetItemComments("mySection","myItem") {
+
+	print("Comment for myItem", com, "\n")
+
+}
+*/
+func (this *Ini) GetItemComments(section string, item string) []string {
+	if this.ItemExists(section,item) {
+		return this.data[section].items[item].comments
+	}
+	return make([]string,0)
 }
 
 /*
@@ -341,7 +401,6 @@ func (this *Ini) Save(params ...string) error {
 	if this.Filename == "" {
 		return errors.New("You must specify a filename before saving")
 	}
-
 	return ioutil.WriteFile(this.Filename,  []byte( this.Sprint() ), os.ModePerm)
 }
 
@@ -352,16 +411,35 @@ TIPS :
 You can set myIni.ItemPrefix, myIni.SectionSeparator and myIni.NoComments to tweak format aspect
 */
 func (this *Ini) Sprint() string {
-	s := ""
+	cr := "\r\n"
+	s  := ""
 
 	sections := this.GetSections()
 	for i:=0 ; i<len(sections) ; i++ {
-		s += "[" + sections[i] + "]\r\n"
+		if this.WithComments { // add the sections comments
+			for _, com := range this.GetSectionComments(sections[i]) {
+				s += this.SectionPrefix + this.CommentPrefix + com + cr
+			}
+		}
+
+		s += this.SectionPrefix + "[" + sections[i] + "]" + cr
+
 		items := this.GetItems(sections[i])
 		for j:=0 ; j<len(items) ; j++ {
-			item, _ := this.GetItem(sections[i],items[j])
-			s += this.ItemPrefix + items[j] + "=" + item + "\r\n"
-			if j==len(items)-1 {
+			if this.WithComments { // add the item comments
+				for _, com := range this.GetItemComments(sections[i], items[j]) {
+					s += this.ItemPrefix + this.CommentPrefix + com + cr
+				}
+			}
+		
+			value, _ := this.GetItem(sections[i],items[j])
+			s += this.ItemPrefix + items[j] + this.ItemSuffix + "=" + this.ValuePrefix + value  + cr
+		
+			if j != len(items)-1 {
+				s += this.ItemSeparator
+			}
+
+			if j==len(items)-1 && i != len(sections)-1 { // add section separator if last item
 				s += this.SectionSeparator
 			}
 		}
@@ -381,9 +459,10 @@ func (this *Ini) Print() {
 }
 
 /* TO DO
-GetSectionComments(section string) []strings
-GetItemComments(section string,item string) []strings
-DeleteSection(section string) bool
-DeleteComment(id int) bool
-DeleteComments() bool
+AddSectionComment(section string, comment string) bool
+AddItemComment(section string, item string , comment string) bool
+DeleteItemComment(id int) bool
+DeleteItemComments() bool
+DeleteSectionComment(id int) bool
+DeleteSectionComments() bool
 */
