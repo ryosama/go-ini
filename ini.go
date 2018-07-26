@@ -29,7 +29,8 @@ import (
 	"regexp"
 	"errors"
 	"os"
-	// "github.com/davecgh/go-spew/spew"
+	//"reflect"
+	//"github.com/davecgh/go-spew/spew"
 )
 
 
@@ -384,6 +385,83 @@ func (this *Ini) GetItemComments(section string, item string) []string {
 	return make([]string,0)
 }
 
+// Add a comment to an item, return true if succeed, false otherwise
+func (this *Ini) AddItemComment(section string, item string , comment string) bool {
+	if this.SectionExists(section) && this.ItemExists(section,item) {
+		tmp := this.data[section].items[item]
+		tmp.comments = append(tmp.comments, comment) // add the comment
+		this.data[section].items[item] = tmp
+		return true
+	}
+	return false
+}
+
+// Delete all the comments of an item, return true if succeed, false otherwise
+func (this *Ini) DeleteItemComments(section string, item string) bool {
+	if this.SectionExists(section) && this.ItemExists(section,item) {
+		tmp := this.data[section].items[item]
+		tmp.comments = make([]string,0)			// clear comments
+		this.data[section].items[item] = tmp 
+		return true
+	}
+	return false
+}
+
+// Delete the comment number id, return true if succeed, false otherwise
+func (this *Ini) DeleteItemComment(section string, item string, id int) bool {
+	if this.SectionExists(section) && this.ItemExists(section,item) {
+		comments := this.GetItemComments(section, item)
+		this.DeleteItemComments(section,item) // delete all the comment
+		for i, com := range comments {
+			if i != id {
+				this.AddItemComment(section,item,com) // add new comments except the deleted one
+			}
+		}		
+		return true
+	}
+	return false
+}
+
+
+// Add a comment to a setion, return true if succeed, false otherwise
+func (this *Ini) AddSectionComment(section string, comment string) bool {
+	if this.SectionExists(section) {
+		tmp := this.data[section]
+		tmp.comments = append(tmp.comments, comment) // add the comment
+		this.data[section] = tmp
+		return true
+	}
+	return false
+}
+
+// Delete all the comments of a section, return true if succeed, false otherwise
+func (this *Ini) DeleteSectionComments(section string) bool {
+	if this.SectionExists(section) {
+		tmp := this.data[section]
+		tmp.comments = make([]string,0)			// clear comments
+		this.data[section] = tmp 
+		return true
+	}
+	return false
+}
+
+// Delete the comment number id, return true if succeed, false otherwise
+func (this *Ini) DeleteSectionComment(section string, id int) bool {
+	if this.SectionExists(section) {
+		comments := this.GetSectionComments(section)
+		this.DeleteSectionComments(section) 	// delete all the comment
+		for i, com := range comments {
+			if i != id {
+				this.AddSectionComment(section,com) // add new comments except the deleted one
+			}
+		}
+		return true
+	}
+	return false
+}
+
+
+
 /*
 Save the ini format to a file
 
@@ -457,12 +535,3 @@ You can set myIni.ItemPrefix, myIni.SectionSeparator and myIni.NoComments to twe
 func (this *Ini) Print() {
 	print(this.Sprint())
 }
-
-/* TO DO
-AddSectionComment(section string, comment string) bool
-AddItemComment(section string, item string , comment string) bool
-DeleteItemComment(id int) bool
-DeleteItemComments() bool
-DeleteSectionComment(id int) bool
-DeleteSectionComments() bool
-*/
