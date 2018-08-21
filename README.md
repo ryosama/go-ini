@@ -35,15 +35,21 @@ myIni.Save()
 
 Documentation
 =======
+
+The documentation can be found here : https://godoc.org/github.com/ryosama/go-ini
+
+Or export with this command
+
 ```bash
 $ godoc github.com/ryosama/go-ini
 ```
-Creating object
-	
-    myIni := new(ini.Ini)
---------------------
-Object properties
 
+Creating an object
+====
+    myIni := new(ini.Ini)
+
+Object properties
+=========
     // Last filename pass to Load or Save
     Filename string
 
@@ -71,7 +77,8 @@ Object properties
     // Caractere(s) from prefixing a comment (default is "; ")
     CommentPrefix string
     // contains filtered or unexported fields
---------------------
+Methods
+======
 - AddItem
 
 Add an item. Returns true if success, false if item already exists
@@ -291,4 +298,3 @@ Return the ini format into a formatted string
 TIPS : You can set _SectionPrefix,ItemPrefix, ItemSuffix, ValuePrefix, SectionSeparator, ItemSeparator, WithComments, CommentPrefix_ to tweak format aspect
 
 	func (this *Ini) Sprint() string
-    
