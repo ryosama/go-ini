@@ -4,13 +4,14 @@ You can parse, read values, set values and save your ini files
 
 Basic Usage :
 
-myIni := new(ini.Ini)
+import "github.com/ryosama/go-ini"
 
-if err := myIni.LoadFromFile("config.ini") ; err {
-	panic("Unable to load configuration : ", err)
+myIni := new(ini.Ini)
+if err := myIni.LoadFromFile("config.ini") ; err != nil {
+	panic("Unable to load configuration : " + err.Error())
 }
 
-myHost := myIni.Get("Server","host")
+myHost, _ := myIni.Get("Server","host")
 
 if myIni.Exists("Server","port") { // test if key exists
 	myPort := int( myIni.Get("Server","port") )
@@ -29,7 +30,6 @@ import (
 	"regexp"
 	"errors"
 	"os"
-	//"reflect"
 	//"github.com/davecgh/go-spew/spew"
 )
 
@@ -86,7 +86,7 @@ type Item struct {
 }
 
 /*
-filename : Read ini format from this file
+Read ini format from a file
 
 Example :
 
@@ -486,7 +486,7 @@ func (this *Ini) Save(params ...string) error {
 Return the ini format into a formatted string
 
 TIPS :
-You can set myIni.ItemPrefix, myIni.SectionSeparator and myIni.NoComments to tweak format aspect
+You can set SectionPrefix,ItemPrefix, ItemSuffix, ValuePrefix, SectionSeparator, ItemSeparator, WithComments, CommentPrefix to tweak format aspect
 */
 func (this *Ini) Sprint() string {
 	cr := "\r\n"
@@ -530,7 +530,7 @@ func (this *Ini) Sprint() string {
 Print the ini format into a formatted string
 
 TIPS :
-You can set myIni.ItemPrefix, myIni.SectionSeparator and myIni.NoComments to tweak format aspect
+You can set SectionPrefix,ItemPrefix, ItemSuffix, ValuePrefix, SectionSeparator, ItemSeparator, WithComments, CommentPrefix to tweak format aspect
 */
 func (this *Ini) Print() {
 	print(this.Sprint())

@@ -4,11 +4,10 @@ import (
 	"testing"
 	"fmt"
 	"sort"
-	_ "github.com/davecgh/go-spew/spew"
+	// "github.com/davecgh/go-spew/spew"
 )
 
 func Test (t *testing.T) {
-	//var result string = ""
 	var a []string
 	var s string	= ""
 	var b bool 		= false
