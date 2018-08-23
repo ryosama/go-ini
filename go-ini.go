@@ -39,7 +39,7 @@ Create a new Ini object
 
 Example :
 
-myIni := new(ini.Ini)
+	myIni := new(ini.Ini)
 */
 type Ini struct {
 	data 	 	map[string]Section
@@ -90,7 +90,7 @@ Read ini format from a file
 
 Example :
 
-err := myIni.LoadFromFile("config.ini")
+	err := myIni.LoadFromFile("config.ini")
 */
 func (this *Ini) LoadFromFile(filename string) error {
 	this.Filename = filename
@@ -108,13 +108,13 @@ Load data from a string pointer
 
 Example :
 
-content := `
+	content := `
 
-[section1]
+	[section1]
 
-item1=value1`
+	item1=value1`
 
-myini.LoadFromString( &content )
+	myini.LoadFromString( &content )
 */
 func (this *Ini) LoadFromString(content *string) {
 
@@ -222,7 +222,7 @@ If the item does not exists, return false as second return value
 
 Example :
 
-value, success := myini.GetItem("section1","item1")
+	value, success := myini.GetItem("section1","item1")
 */
 func (this *Ini) GetItem(section string, item string) (string, bool) {
 	if this.ItemExists(section, item) {
@@ -354,11 +354,11 @@ Return the comments, one per line, just before the section, return empty slice o
 
 Example : 
 
-for _, com := range sectionExists := myIni.GetSectionComments("mySection") {
+	for _, com := range sectionExists := myIni.GetSectionComments("mySection") {
 
-	print("Comment for mySection", com, "\n")
+		print("Comment for mySection", com, "\n")
 
-}
+	}
 */
 func (this *Ini) GetSectionComments(section string) []string {
 	if this.SectionExists(section) {
@@ -372,11 +372,11 @@ Return the comments, one per line, just before the item, return empty slice of s
 
 Example : 
 
-for _, com := range myIni.GetItemComments("mySection","myItem") {
+	for _, com := range myIni.GetItemComments("mySection","myItem") {
 
-	print("Comment for myItem", com, "\n")
+		print("Comment for myItem", com, "\n")
 
-}
+	}
 */
 func (this *Ini) GetItemComments(section string, item string) []string {
 	if this.ItemExists(section,item) {
@@ -467,9 +467,9 @@ Save the ini format to a file
 
 Example :
 
-err := myIni.Save() // use myIni.Filename to save
+	err := myIni.Save() // use myIni.Filename to save
 
-err := myIni.Save("new_config.ini") // use new_config.ini and set myIni.Filename
+	err := myIni.Save("new_config.ini") // use new_config.ini and set myIni.Filename
 */
 func (this *Ini) Save(params ...string) error {
 	if len(params)>0 {
