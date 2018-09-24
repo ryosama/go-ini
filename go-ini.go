@@ -1,5 +1,4 @@
-/*
-This package permits interaction with ini files (configuration file format for windows).
+/*Package ini permits interaction with ini files (configuration file format for windows).
 You can parse, read values, set values and save your ini files
 
 Basic Usage :
@@ -25,38 +24,37 @@ myIni.Save()
 package ini
 
 import (
-	"io/ioutil"
-	"strings"
-	"regexp"
 	"errors"
+	"io/ioutil"
 	"os"
+	"regexp"
+	"strings"
 )
 
-
 /*
-Create a new Ini object
+Ini Create a new Ini object
 
 Example :
 
 	myIni := new(ini.Ini)
 */
 type Ini struct {
-	data 	 	map[string]Section
+	data map[string]Section
 
 	// Last filename pass to Load or Save
-	Filename 	string
+	Filename string
 
 	// Add this string before section (default is "")
 	SectionPrefix string
 
 	// Add this string before every items (default is "  ")
-	ItemPrefix 	string
-	
+	ItemPrefix string
+
 	// Add this string after every items (default is " ")
-	ItemSuffix 	string
+	ItemSuffix string
 
 	// Add this string before every values (default is " ")
-	ValuePrefix	string
+	ValuePrefix string
 
 	// Add this string before every new sections (except the first one) (default is "\r\n")
 	SectionSeparator string
@@ -71,39 +69,38 @@ type Ini struct {
 	CommentPrefix string
 }
 
-
-// A section has items and comments
+// Section has items and comments
 type Section struct {
-	items 	 map[string]Item
+	items    map[string]Item
 	comments []string
 }
 
-// An item has value and comments
+// Item has value and comments
 type Item struct {
-	value 	   string
+	value    string
 	comments []string
 }
 
 /*
-Read ini format from a file
+LoadFromFile reads ini format from a file
 
 Example :
 
 	err := myIni.LoadFromFile("config.ini")
 */
-func (this *Ini) LoadFromFile(filename string) error {
-	this.Filename = filename
-	content, err := ioutil.ReadFile(this.Filename)
+func (ini *Ini) LoadFromFile(filename string) error {
+	ini.Filename = filename
+	content, err := ioutil.ReadFile(ini.Filename)
 	if err != nil {
-       return err
-    }
-    tmp := string(content)
-    this.LoadFromString(&tmp)
-    return nil
+		return err
+	}
+	tmp := string(content)
+	ini.LoadFromString(&tmp)
+	return nil
 }
 
 /*
-Load data from a string pointer
+LoadFromString loads data from a string pointer
 
 Example :
 
@@ -115,107 +112,107 @@ Example :
 
 	myini.LoadFromString( &content )
 */
-func (this *Ini) LoadFromString(content *string) {
+func (ini *Ini) LoadFromString(content *string) {
 
 	// default value for formating
-	this.WithComments 		= true
-	this.CommentPrefix 		= "; "
-	this.SectionSeparator 	= "\r\n"
-	this.ItemSeparator		= "\r\n"
-	this.ItemPrefix 		= "  "
-	this.ItemSuffix			= " "
-	this.ValuePrefix		= " "
+	ini.WithComments = true
+	ini.CommentPrefix = "; "
+	ini.SectionSeparator = "\r\n"
+	ini.ItemSeparator = "\r\n"
+	ini.ItemPrefix = "  "
+	ini.ItemSuffix = " "
+	ini.ValuePrefix = " "
 
-	current_section := ""
-	comments 	    := make([]string,0)
+	currentSection := ""
+	comments := make([]string, 0)
 
-    content_array := strings.Split( *content, "\n") // split lines into array
+	contentArray := strings.Split(*content, "\n") // split lines into array
 
-    re_comment 	:= regexp.MustCompile("\\s*[;#]\\s*(.*)")
-    re_section 	:= regexp.MustCompile("\\s*\\[\\s*(.+?)\\s*\\]")
-	re_item 	:= regexp.MustCompile("\\s*(.+?)\\s*=\\s*(.+)\\s*")
+	reComment := regexp.MustCompile("\\s*[;#]\\s*(.*)")
+	reSection := regexp.MustCompile("\\s*\\[\\s*(.+?)\\s*\\]")
+	reItem := regexp.MustCompile("\\s*(.+?)\\s*=\\s*(.+)\\s*")
 
-   	this.data = make(map[string]Section)
+	ini.data = make(map[string]Section)
 
-    for _, value := range content_array { // for each line
+	for _, value := range contentArray { // for each line
 
-    	if matches := re_comment.FindStringSubmatch( value ) ; matches != nil { // a comment
-    		comments = append(comments, strings.TrimSpace(matches[1]) )
+		if matches := reComment.FindStringSubmatch(value); matches != nil { // a comment
+			comments = append(comments, strings.TrimSpace(matches[1]))
 
-		} else if 	matches := re_section.FindStringSubmatch( value ) ; matches != nil { // a section
+		} else if matches := reSection.FindStringSubmatch(value); matches != nil { // a section
 			section := strings.TrimSpace(matches[1])
-			current_section = section 		// set active section
+			currentSection = section // set active section
 
 			var d Section
-				d.comments = comments
-			this.data[current_section] = d
-			comments = make([]string,0) // clears comments
-			
-    	} else if 	matches := re_item.FindStringSubmatch( value ) ; matches != nil { // an item
-    		name  := strings.TrimSpace(matches[1])
-    		value := strings.TrimSpace(matches[2])
+			d.comments = comments
+			ini.data[currentSection] = d
+			comments = make([]string, 0) // clears comments
 
-    		var tmp Item
-				tmp.comments = comments
-				tmp.value 	 = value
+		} else if matches := reItem.FindStringSubmatch(value); matches != nil { // an item
+			name := strings.TrimSpace(matches[1])
+			value := strings.TrimSpace(matches[2])
 
-			s := this.data[current_section]
-			if 	s.items == nil { // create structure for the first time
+			var tmp Item
+			tmp.comments = comments
+			tmp.value = value
+
+			s := ini.data[currentSection]
+			if s.items == nil { // create structure for the first time
 				s.items = make(map[string]Item)
 			}
 			s.items[name] = tmp
-			this.data[current_section] = s
-			comments = make([]string,0) // clears comments
-		
-    	}
-    }
+			ini.data[currentSection] = s
+			comments = make([]string, 0) // clears comments
+
+		}
+	}
 }
 
-
-/* Returns all the sections of the ini file */
-func (this *Ini) GetSections() []string {
-	sections := make( []string, len(this.data) )
+/*GetSections returns all the sections of the ini file */
+func (ini *Ini) GetSections() []string {
+	sections := make([]string, len(ini.data))
 	i := 0
-	for key,_ := range this.data {
-		sections[i] = key ; i++
+	for key := range ini.data {
+		sections[i] = key
+		i++
 	}
 	return sections
 }
 
-/* Returns all the items of the ini file for a given section */
-func (this *Ini) GetItems(section string) []string {
-	items := make( []string, len(this.data[section].items) )
+/*GetItems returns all the items of the ini file for a given section */
+func (ini *Ini) GetItems(section string) []string {
+	items := make([]string, len(ini.data[section].items))
 	i := 0
-	for key,_ := range this.data[section].items {
-		items[i] = key ; i++
+	for key := range ini.data[section].items {
+		items[i] = key
+		i++
 	}
 	return items
 }
 
-/* Returns true or false if the section exists */
-func (this *Ini) SectionExists(section string) bool {
-	_, exists := this.data[section]
+/*SectionExists returns true or false if the section exists */
+func (ini *Ini) SectionExists(section string) bool {
+	_, exists := ini.data[section]
 	return exists
 }
 
-
-/* Returns true or false if the item exists for the given section */
-func (this *Ini) ItemExists(section string, item string) bool {
-	_, exists := this.data[section]
+/*ItemExists returns true or false if the item exists for the given section */
+func (ini *Ini) ItemExists(section string, item string) bool {
+	_, exists := ini.data[section]
 	if exists {
-		_, exists := this.data[section].items[item]
+		_, exists := ini.data[section].items[item]
 		return exists
 	}
 	return false
 }
 
-/* Alias for ItemExists */
-func (this *Ini) Exists(section string, item string) bool {
-	return this.ItemExists(section, item)
+/*Exists is an alias for ItemExists */
+func (ini *Ini) Exists(section string, item string) bool {
+	return ini.ItemExists(section, item)
 }
 
 /*
-Returns the items value of the ini file for a given section and item (and true as second return value)
+GetItem returns the items value of the ini file for a given section and item (and true as second return value)
 
 If the item does not exists, return false as second return value
 
@@ -223,135 +220,134 @@ Example :
 
 	value, success := myini.GetItem("section1","item1")
 */
-func (this *Ini) GetItem(section string, item string) (string, bool) {
-	if this.ItemExists(section, item) {
-		return this.data[section].items[item].value, true
+func (ini *Ini) GetItem(section string, item string) (string, bool) {
+	if ini.ItemExists(section, item) {
+		return ini.data[section].items[item].value, true
 	}
 	return "", false
 }
 
-/* Alias for GetItem */
-func (this *Ini) Get(section string, item string) (string, bool) {
-	return this.GetItem(section, item)
+/*Get is an alias for GetItem */
+func (ini *Ini) Get(section string, item string) (string, bool) {
+	return ini.GetItem(section, item)
 }
 
 /*
-Set the value of an item
+SetItem sets the value of an item
 
 Returns true if success, false section or item does not exists
 */
-func (this *Ini) SetItem(section string, item string, value string) bool {
-	if this.ItemExists(section,item) {
-		var i Item = this.data[section].items[item]
+func (ini *Ini) SetItem(section string, item string, value string) bool {
+	if ini.ItemExists(section, item) {
+		i := ini.data[section].items[item]
 		i.value = value
-		this.data[section].items[item] = i
+		ini.data[section].items[item] = i
 		return true
 	}
 	return false
 }
 
-/* Alias for SetItem */
-func (this *Ini) Set(section string, item string, value string) bool {
-	return this.SetItem(section, item, value)
+/*Set is an alias for SetItem */
+func (ini *Ini) Set(section string, item string, value string) bool {
+	return ini.SetItem(section, item, value)
 }
 
 /*
-Rename a section
+RenameSection renames a section
 
 Returns true if success, false if section does not exists
 */
-func (this *Ini) RenameSection(oldName string, newName string) bool {
-	if this.SectionExists(oldName) {
-		this.data[newName] = this.data[oldName]
-		delete(this.data, oldName)
+func (ini *Ini) RenameSection(oldName string, newName string) bool {
+	if ini.SectionExists(oldName) {
+		ini.data[newName] = ini.data[oldName]
+		delete(ini.data, oldName)
 		return true
 	}
 	return false
 }
 
 /*
-Rename an item
+RenameItem renames an item
 
 Returns true if success, false if section or item does not exists
 */
-func (this *Ini) RenameItem(section, oldName string, newName string) bool {
-	if this.ItemExists(section, oldName) {
-		this.data[section].items[newName] = this.data[section].items[oldName]
-		delete(this.data[section].items, oldName)
+func (ini *Ini) RenameItem(section, oldName string, newName string) bool {
+	if ini.ItemExists(section, oldName) {
+		ini.data[section].items[newName] = ini.data[section].items[oldName]
+		delete(ini.data[section].items, oldName)
 		return true
 	}
 	return false
 }
 
 /*
-Add a section
+AddSection adds a section
 
 Returns true if success, false if section already exists
 */
-func (this *Ini) AddSection(section string) bool {
-	if this.SectionExists(section) {
+func (ini *Ini) AddSection(section string) bool {
+	if ini.SectionExists(section) {
 		return false
 	}
 	var s Section
-	s.items 	= make(map[string]Item)
-	s.comments 	= make([]string,0)
-	this.data[section] = s
+	s.items = make(map[string]Item)
+	s.comments = make([]string, 0)
+	ini.data[section] = s
 	return true
 }
 
-/* 
-Add an item
+/*
+AddItem adds an item
 
 Returns true if success, false if item already exists
 */
-func (this *Ini) AddItem(section string, item string, value string) bool {
-	if this.SectionExists(section) {
-		if this.ItemExists(section,item) {
+func (ini *Ini) AddItem(section string, item string, value string) bool {
+	if ini.SectionExists(section) {
+		if ini.ItemExists(section, item) {
 			return false
 		}
 
 		var tmp Item
-			tmp.value = value
-			tmp.comments = make([]string,0)
-		this.data[section].items[item] = tmp
-		return true
+		tmp.value = value
+		tmp.comments = make([]string, 0)
+		ini.data[section].items[item] = tmp
 
 	} else {
 		// section does not exist --> create it
-		this.AddSection(section)
-		this.AddItem(section, item, value)
-		return true
+		ini.AddSection(section)
+		ini.AddItem(section, item, value)
 	}
+	return true
 }
 
-// Set a value for an item, create section and item if needed
-func (this *Ini) SetOrCreate(section string, item string, value string) {
-	this.AddItem(section,item,value)
-	this.Set(section,item,value)
+// SetOrCreate sets a value for an item, create section and item if needed
+func (ini *Ini) SetOrCreate(section string, item string, value string) {
+	ini.AddItem(section, item, value)
+	ini.Set(section, item, value)
 }
 
-// Delete an item, return true if succes, false if the item does not exists
-func (this *Ini) DeleteItem(section string,item string) bool {
-	if this.ItemExists(section,item) {
-		delete(this.data[section].items,item)
+// DeleteItem deletes an item, return true if succes, false if the item does not exists
+func (ini *Ini) DeleteItem(section string, item string) bool {
+	if ini.ItemExists(section, item) {
+		delete(ini.data[section].items, item)
 		return true
 	}
 	return false
 }
 
-// Delete a section, return true if succes, false if the section does not exists
-func (this *Ini) DeleteSection(section string) bool {
-	if this.SectionExists(section) {
-		delete(this.data,section)
+// DeleteSection deletes a section, return true if succes, false if the section does not exists
+func (ini *Ini) DeleteSection(section string) bool {
+	if ini.SectionExists(section) {
+		delete(ini.data, section)
 		return true
 	}
 	return false
 }
 
 /*
-Return the comments, one per line, just before the section, return empty slice of string if section does not exists.
+GetSectionComments returns the comments, one per line, just before the section, return empty slice of string if section does not exists.
 
-Example : 
+Example :
 
 	for _, com := range sectionExists := myIni.GetSectionComments("mySection") {
 
@@ -359,17 +355,17 @@ Example :
 
 	}
 */
-func (this *Ini) GetSectionComments(section string) []string {
-	if this.SectionExists(section) {
-		return this.data[section].comments
+func (ini *Ini) GetSectionComments(section string) []string {
+	if ini.SectionExists(section) {
+		return ini.data[section].comments
 	}
-	return make([]string,0)
+	return make([]string, 0)
 }
 
 /*
-Return the comments, one per line, just before the item, return empty slice of string if item does not exists.
+GetItemComments returns the comments, one per line, just before the item, return empty slice of string if item does not exists.
 
-Example : 
+Example :
 
 	for _, com := range myIni.GetItemComments("mySection","myItem") {
 
@@ -377,81 +373,43 @@ Example :
 
 	}
 */
-func (this *Ini) GetItemComments(section string, item string) []string {
-	if this.ItemExists(section,item) {
-		return this.data[section].items[item].comments
+func (ini *Ini) GetItemComments(section string, item string) []string {
+	if ini.ItemExists(section, item) {
+		return ini.data[section].items[item].comments
 	}
-	return make([]string,0)
+	return make([]string, 0)
 }
 
-// Add a comment to an item, return true if succeed, false otherwise
-func (this *Ini) AddItemComment(section string, item string , comment string) bool {
-	if this.SectionExists(section) && this.ItemExists(section,item) {
-		tmp := this.data[section].items[item]
+// AddItemComment adds a comment to an item, return true if succeed, false otherwise
+func (ini *Ini) AddItemComment(section string, item string, comment string) bool {
+	if ini.SectionExists(section) && ini.ItemExists(section, item) {
+		tmp := ini.data[section].items[item]
 		tmp.comments = append(tmp.comments, comment) // add the comment
-		this.data[section].items[item] = tmp
+		ini.data[section].items[item] = tmp
 		return true
 	}
 	return false
 }
 
-// Delete all the comments of an item, return true if succeed, false otherwise
-func (this *Ini) DeleteItemComments(section string, item string) bool {
-	if this.SectionExists(section) && this.ItemExists(section,item) {
-		tmp := this.data[section].items[item]
-		tmp.comments = make([]string,0)			// clear comments
-		this.data[section].items[item] = tmp 
+// DeleteItemComments deletes all the comments of an item, return true if succeed, false otherwise
+func (ini *Ini) DeleteItemComments(section string, item string) bool {
+	if ini.SectionExists(section) && ini.ItemExists(section, item) {
+		tmp := ini.data[section].items[item]
+		tmp.comments = make([]string, 0) // clear comments
+		ini.data[section].items[item] = tmp
 		return true
 	}
 	return false
 }
 
-// Delete the comment number id, return true if succeed, false otherwise
-func (this *Ini) DeleteItemComment(section string, item string, id int) bool {
-	if this.SectionExists(section) && this.ItemExists(section,item) {
-		comments := this.GetItemComments(section, item)
-		this.DeleteItemComments(section,item) // delete all the comment
+// DeleteItemComment deletes the comment number id, return true if succeed, false otherwise
+func (ini *Ini) DeleteItemComment(section string, item string, id int) bool {
+	if ini.SectionExists(section) && ini.ItemExists(section, item) {
+		comments := ini.GetItemComments(section, item)
+		ini.DeleteItemComments(section, item) // delete all the comment
 		for i, com := range comments {
 			if i != id {
-				this.AddItemComment(section,item,com) // add new comments except the deleted one
-			}
-		}		
-		return true
-	}
-	return false
-}
-
-
-// Add a comment to a setion, return true if succeed, false otherwise
-func (this *Ini) AddSectionComment(section string, comment string) bool {
-	if this.SectionExists(section) {
-		tmp := this.data[section]
-		tmp.comments = append(tmp.comments, comment) // add the comment
-		this.data[section] = tmp
-		return true
-	}
-	return false
-}
-
-// Delete all the comments of a section, return true if succeed, false otherwise
-func (this *Ini) DeleteSectionComments(section string) bool {
-	if this.SectionExists(section) {
-		tmp := this.data[section]
-		tmp.comments = make([]string,0)			// clear comments
-		this.data[section] = tmp 
-		return true
-	}
-	return false
-}
-
-// Delete the comment number id, return true if succeed, false otherwise
-func (this *Ini) DeleteSectionComment(section string, id int) bool {
-	if this.SectionExists(section) {
-		comments := this.GetSectionComments(section)
-		this.DeleteSectionComments(section) 	// delete all the comment
-		for i, com := range comments {
-			if i != id {
-				this.AddSectionComment(section,com) // add new comments except the deleted one
+				ini.AddItemComment(section, item, com) // add new comments except the deleted one
 			}
 		}
 		return true
@@ -459,10 +417,45 @@ func (this *Ini) DeleteSectionComment(section string, id int) bool {
 	return false
 }
 
+// AddSectionComment adds a comment to a setion, return true if succeed, false otherwise
+func (ini *Ini) AddSectionComment(section string, comment string) bool {
+	if ini.SectionExists(section) {
+		tmp := ini.data[section]
+		tmp.comments = append(tmp.comments, comment) // add the comment
+		ini.data[section] = tmp
+		return true
+	}
+	return false
+}
 
+// DeleteSectionComments deletes all the comments of a section, return true if succeed, false otherwise
+func (ini *Ini) DeleteSectionComments(section string) bool {
+	if ini.SectionExists(section) {
+		tmp := ini.data[section]
+		tmp.comments = make([]string, 0) // clear comments
+		ini.data[section] = tmp
+		return true
+	}
+	return false
+}
+
+// DeleteSectionComment deletes the comment number id, return true if succeed, false otherwise
+func (ini *Ini) DeleteSectionComment(section string, id int) bool {
+	if ini.SectionExists(section) {
+		comments := ini.GetSectionComments(section)
+		ini.DeleteSectionComments(section) // delete all the comment
+		for i, com := range comments {
+			if i != id {
+				ini.AddSectionComment(section, com) // add new comments except the deleted one
+			}
+		}
+		return true
+	}
+	return false
+}
 
 /*
-Save the ini format to a file
+Save saves the ini format to a file
 
 Example :
 
@@ -470,54 +463,54 @@ Example :
 
 	err := myIni.Save("new_config.ini") // use new_config.ini and set myIni.Filename
 */
-func (this *Ini) Save(params ...string) error {
-	if len(params)>0 {
-		this.Filename = params[0]
+func (ini *Ini) Save(params ...string) error {
+	if len(params) > 0 {
+		ini.Filename = params[0]
 	}
 
-	if this.Filename == "" {
+	if ini.Filename == "" {
 		return errors.New("You must specify a filename before saving")
 	}
-	return ioutil.WriteFile(this.Filename,  []byte( this.Sprint() ), os.ModePerm)
+	return ioutil.WriteFile(ini.Filename, []byte(ini.Sprint()), os.ModePerm)
 }
 
 /*
-Return the ini format into a formatted string
+Sprint returns the ini format into a formatted string
 
 TIPS :
 You can set SectionPrefix,ItemPrefix, ItemSuffix, ValuePrefix, SectionSeparator, ItemSeparator, WithComments, CommentPrefix to tweak format aspect
 */
-func (this *Ini) Sprint() string {
+func (ini *Ini) Sprint() string {
 	cr := "\r\n"
-	s  := ""
+	s := ""
 
-	sections := this.GetSections()
-	for i:=0 ; i<len(sections) ; i++ {
-		if this.WithComments { // add the sections comments
-			for _, com := range this.GetSectionComments(sections[i]) {
-				s += this.SectionPrefix + this.CommentPrefix + com + cr
+	sections := ini.GetSections()
+	for i := 0; i < len(sections); i++ {
+		if ini.WithComments { // add the sections comments
+			for _, com := range ini.GetSectionComments(sections[i]) {
+				s += ini.SectionPrefix + ini.CommentPrefix + com + cr
 			}
 		}
 
-		s += this.SectionPrefix + "[" + sections[i] + "]" + cr
+		s += ini.SectionPrefix + "[" + sections[i] + "]" + cr
 
-		items := this.GetItems(sections[i])
-		for j:=0 ; j<len(items) ; j++ {
-			if this.WithComments { // add the item comments
-				for _, com := range this.GetItemComments(sections[i], items[j]) {
-					s += this.ItemPrefix + this.CommentPrefix + com + cr
+		items := ini.GetItems(sections[i])
+		for j := 0; j < len(items); j++ {
+			if ini.WithComments { // add the item comments
+				for _, com := range ini.GetItemComments(sections[i], items[j]) {
+					s += ini.ItemPrefix + ini.CommentPrefix + com + cr
 				}
 			}
-		
-			value, _ := this.GetItem(sections[i],items[j])
-			s += this.ItemPrefix + items[j] + this.ItemSuffix + "=" + this.ValuePrefix + value  + cr
-		
+
+			value, _ := ini.GetItem(sections[i], items[j])
+			s += ini.ItemPrefix + items[j] + ini.ItemSuffix + "=" + ini.ValuePrefix + value + cr
+
 			if j != len(items)-1 {
-				s += this.ItemSeparator
+				s += ini.ItemSeparator
 			}
 
-			if j==len(items)-1 && i != len(sections)-1 { // add section separator if last item
-				s += this.SectionSeparator
+			if j == len(items)-1 && i != len(sections)-1 { // add section separator if last item
+				s += ini.SectionSeparator
 			}
 		}
 	}
@@ -526,11 +519,11 @@ func (this *Ini) Sprint() string {
 }
 
 /*
-Print the ini format into a formatted string
+Print prints the ini format into a formatted string
 
 TIPS :
 You can set SectionPrefix,ItemPrefix, ItemSuffix, ValuePrefix, SectionSeparator, ItemSeparator, WithComments, CommentPrefix to tweak format aspect
 */
-func (this *Ini) Print() {
-	print(this.Sprint())
+func (ini *Ini) Print() {
+	print(ini.Sprint())
 }
